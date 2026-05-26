@@ -362,6 +362,14 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              migrationPath:
+                description: |-
+                  MigrationPath is the infrastructure update workflow selected during
+                  preflight. It is persisted so later phases do not switch paths mid-migration.
+                enum:
+                - Native
+                - Legacy
+                type: string
               startTime:
                 description: StartTime is when the migration started.
                 format: date-time

@@ -24,6 +24,10 @@ import (
 // MigrationState represents the overall state of the migration workflow.
 type MigrationState string
 
+// MigrationPath represents which infrastructure update workflow the controller
+// selected during preflight.
+type MigrationPath string
+
 const (
 	// MigrationStatePending indicates the migration has not started.
 	MigrationStatePending MigrationState = "Pending"
@@ -31,6 +35,15 @@ const (
 	MigrationStateRunning MigrationState = "Running"
 	// MigrationStatePaused indicates the migration is paused by the user.
 	MigrationStatePaused MigrationState = "Paused"
+)
+
+const (
+	// MigrationPathNative uses the direct Infrastructure update flow available on
+	// OpenShift 5.x when VSphereMultiVCenterDay2 is enabled.
+	MigrationPathNative MigrationPath = "Native"
+	// MigrationPathLegacy uses the compatibility flow that pauses CVO and
+	// temporarily modifies the Infrastructure CRD.
+	MigrationPathLegacy MigrationPath = "Legacy"
 )
 
 // SecretReference references a secret by name and namespace.
@@ -79,13 +92,20 @@ type VmwareCloudFoundationMigrationStatus struct {
 	// CompletionTime is when the migration completed.
 	// +optional
 	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
+
+	// MigrationPath is the infrastructure update workflow selected during
+	// preflight. It is persisted so later phases do not switch paths mid-migration.
+	// +optional
+	// +kubebuilder:validation:Enum=Native;Legacy
+	MigrationPath MigrationPath `json:"migrationPath,omitempty"`
 }
 
 // Condition type constants for the migration workflow.
 // The reconciler checks conditions in this order; if a condition is not True,
 // it executes the work for that condition and returns with RequeueAfter.
 const (
-	// ConditionInfrastructurePrepared indicates the cluster is unlocked for changes (CVO disabled).
+	// ConditionInfrastructurePrepared indicates preflight checks passed and the
+	// migration path has been selected.
 	ConditionInfrastructurePrepared = "InfrastructurePrepared"
 
 	// ConditionDestinationInitialized indicates the target vCenter has all required assets
@@ -101,7 +121,8 @@ const (
 	ConditionWorkloadMigrated = "WorkloadMigrated"
 
 	// ConditionSourceCleaned indicates the old vCenter is fully detached
-	// (removed from Infrastructure, config, secrets; CVO re-enabled).
+	// (removed from Infrastructure, config, and secrets; CVO is re-enabled when
+	// required by the legacy path).
 	ConditionSourceCleaned = "SourceCleaned"
 
 	// ConditionReady indicates migration is 100% complete.

@@ -29,6 +29,7 @@ rules:
   - ""
   resources:
   - nodes
+  - persistentvolumes
   verbs:
   - get
   - list
@@ -54,6 +55,15 @@ rules:
   - update
   - watch
 - apiGroups:
+  - autoscaling.openshift.io
+  resources:
+  - clusterautoscalers
+  - machineautoscalers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - config.openshift.io
   resources:
   - clusteroperators
@@ -63,6 +73,15 @@ rules:
   - list
   - patch
   - update
+  - watch
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - clusterversions
+  - featuregates
+  verbs:
+  - get
+  - list
   - watch
 - apiGroups:
   - coordination.k8s.io
@@ -89,6 +108,14 @@ rules:
   - list
   - patch
   - update
+  - watch
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - machinehealthchecks
+  verbs:
+  - get
+  - list
   - watch
 - apiGroups:
   - migration.openshift.io
